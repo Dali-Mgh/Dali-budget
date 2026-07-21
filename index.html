@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت بودجه ارزی خانوادگی (¥)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        h2 { color: #333; font-size: 18px; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: #007bff; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- بخش ثبت هزینه -->
+    <div class="section">
+        <h2>📥 ثبت هزینه جدید (یوان ¥)</h2>
+        <div class="row">
+            <div><input type="text" id="exTitle" placeholder="عنوان هزینه"></div>
+            <div><input type="number" id="exAmount" placeholder="مبلغ"></div>
+        </div>
+        <div class="row">
+            <div>
+                <select id="exCategory">
+                    <option>قبوض (تجمیعی)</option>
+                    <option>اجاره</option>
+                    <option>هزینه‌های ماشین</option>
+                    <option>سفر</option>
+                    <option>جانبی محمد</option>
+                    <option>جانبی فاطمه</option>
+                    <option>هزینه‌های مصرفی منزل</option>
+                    <option>درمان احتمالی</option>
+                    <option>سرگرمی و تفریحات</option>
+                    <option>پوشاک</option>
+                    <option>اشتراک‌های دیجیتال</option>
+                    <option>هزینه‌های اقامتی و اداری</option>
+                    <option>هدایا و مناسبت‌ها</option>
+                </select>
+            </div>
+            <div><input type="date" id="exDate"></div>
+        </div>
+        <button onclick="saveExpense()">ذخیره هزینه</button>
+    </div>
+
+    <!-- بخش بودجه سالانه -->
+    <div class="section">
+        <h2>🎯 تعیین بودجه سالانه</h2>
+        <div class="row">
+            <div><select id="bgCategory"></select></div>
+            <div><input type="number" id="bgAmount" placeholder="بودجه سالانه (¥)"></div>
+        </div>
+        <button onclick="saveBudget()">ذخیره بودجه</button>
+    </div>
+
+    <!-- بخش گزارش -->
+    <div class="section">
+        <h2>📊 گزارش عملکرد ماهانه</h2>
+        <div class="row">
+            <div>
+                <select id="reportYear">
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+            <div>
+                <select id="reportMonth">
+                    <option value="01">ژانویه</option><option value="02">فوریه</option>
+                    <option value="03">مارس</option><option value="04">آوریل</option>
+                    <option value="05">مه</option><option value="06">ژوئن</option>
+                    <option value="07">جولای</option><option value="08">اوت</option>
+                    <option value="09">سپتامبر</option><option value="10">اکتبر</option>
+                    <option value="11">نوامبر</option><option value="12">دسامبر</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="generateReport()">بروزرسانی نمودار</button>
+        <canvas id="budgetChart" style="margin-top:20px;"></canvas>
+    </div>
+</div>
+
+<script>
+    // اطلاعات فایربیس خود را اینجا جایگزین کنید
+    const firebaseConfig = {
+        apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
+        authDomain: "budget-5074a.firebaseapp.com",
+        databaseURL: "https://budget-5074a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "budget-5074a",
+        storageBucket: "budget-5074a.firebasestorage.app",
+        messagingSenderId: "581233035544",
+        appId: "1:581233035544:web:954e065a16b3147109b66d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // پر کردن لیست دسته‌بندی‌ها برای بخش بودجه
+    const catSelect = document.getElementById('exCategory');
+    const bgSelect = document.getElementById('bgCategory');
+    bgSelect.innerHTML = catSelect.innerHTML;
+
+    // ثبت هزینه
+    function saveExpense() {
+        const title = document.getElementById('exTitle').value;
+        const amount = Number(document.getElementById('exAmount').value);
+        const category = document.getElementById('exCategory').value;
+        const date = document.getElementById('exDate').value;
+        if (!title || !amount || !date) return alert('لطفا همه فیلدها را پر کنید');
+
+        db.ref('expenses').push({ title, amount, category, date }).then(() => {
+            alert('هزینه ثبت شد');
+            document.getElementById('exTitle').value = '';
+            document.getElementById('exAmount').value = '';
+        });
+    }
+
+    // ثبت بودجه
+    function saveBudget() {
+        const category = document.getElementById('bgCategory').value;
+        const amount = Number(document.getElementById('bgAmount').value);
+        if (!amount) return alert('مبلغ را وارد کنید');
+
+        db.ref('budgets/' + category).set(amount).then(() => alert('بودجه ذخیره شد'));
+    }
+
+    // تولید گزارش و رسم نمودار
+    let chartInstance = null;
+    async function generateReport() {
+        const year = document.getElementById('reportYear').value;
+        const month = document.getElementById('reportMonth').value;
+        const targetPrefix = `${year}-${month}`;
+
+        const expSnapshot = await db.ref('expenses').once('value');
+        const bgSnapshot = await db.ref('budgets').once('value');
+        
+        const expenses = expSnapshot.val() || {};
+        const budgets = bgSnapshot.val() || {};
+
+        let categorySums = {};
+        Object.values(expenses).forEach(exp => {
+            if (exp.date.startsWith(targetPrefix)) {
+                categorySums[exp.category] = (categorySums[exp.category] || 0) + exp.amount;
+            }
+        });
+
+        const labels = Array.from(document.getElementById('exCategory').options).map(opt => opt.value);
+        const actualData = labels.map(label => categorySums[label] || 0);
+        const budgetData = labels.map(label => (budgets[label] || 0) / 12);
+
+        if (chartInstance) chartInstance.destroy();
+        
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'هزینه واقعی (¥)', data: actualData, backgroundColor: '#dc3545' },
+                    { label: 'بودجه مجاز ماهانه (¥)', data: budgetData, backgroundColor: '#28a745' }
+                ]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+    }
+</script>
+</body>
+</html>
