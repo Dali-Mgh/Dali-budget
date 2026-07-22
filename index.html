@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+app_code = """<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -23,26 +23,43 @@
             overflow-x: hidden;
         }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Sidebar active state */
-        .nav-item.active {
-            background-color: #2563eb; /* blue-600 */
-            color: #ffffff;
-        }
-        
-        /* Input focus rings */
-        input:focus, select:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px #3b82f6;
-        }
+        .nav-item.active { background-color: #2563eb; color: #ffffff; }
+        input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px #3b82f6; }
     </style>
 </head>
 <body class="flex">
+
+    <!-- ================= LOGIN SCREEN ================= -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 max-w-[90%]">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                    <i class="fa-solid fa-lock text-2xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">ورود به سیستم</h2>
+                <p class="text-xs text-gray-500 mt-1">سامانه مدیریت بودجه ارزی</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نام کاربری</label>
+                    <input type="text" id="login-username" placeholder="مثال: jooji" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-left dir-ltr focus:bg-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">رمز عبور</label>
+                    <input type="password" id="login-password" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-left dir-ltr focus:bg-white">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors mt-2 shadow-md">
+                    ورود
+                </button>
+                <p id="login-error" class="text-red-500 text-xs text-center mt-3 hidden"></p>
+            </form>
+        </div>
+    </div>
 
     <!-- Sidebar (Fixed Right) -->
     <aside class="fixed top-0 right-0 w-64 h-screen bg-gray-900 text-white shadow-xl z-20 flex flex-col transition-all">
@@ -59,6 +76,10 @@
                 <i class="fa-solid fa-plus-circle w-5"></i>
                 <span class="font-medium text-right">ثبت هزینه</span>
             </button>
+            <button onclick="switchTab('records')" id="nav-records" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-list text-lg w-5"></i>
+                <span class="font-medium text-right">ریز هزینه‌ها</span>
+            </button>
             <button onclick="switchTab('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
                 <i class="fa-solid fa-chart-line w-5"></i>
                 <span class="font-medium text-right">گزارش و نمودارها</span>
@@ -67,14 +88,10 @@
                 <i class="fa-solid fa-bullseye w-5"></i>
                 <span class="font-medium text-right">تعیین بودجه سالانه</span>
             </button>
-            <button onclick="switchTab('history')" id="nav-history" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
-                <i class="fa-solid fa-list-ul w-5"></i>
-                <span class="font-medium text-right">ریز هزینه‌ها</span>
-            </button>
         </nav>
         
         <div class="p-4 border-t border-gray-700 text-center text-xs text-gray-500">
-            <span id="auth-status">در حال اتصال...</span>
+            <span id="auth-status">در حال بررسی ورود...</span>
         </div>
     </aside>
 
@@ -90,13 +107,10 @@
                 
                 <form id="expense-form" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">تاریخ پرداخت</label>
                             <input type="date" id="entry-date" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-left dir-ltr">
                         </div>
-                        
-                        <!-- Amount -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ (یوان ¥)</label>
                             <div class="relative">
@@ -104,8 +118,6 @@
                                 <span class="absolute right-3 top-3.5 text-gray-500 font-bold">¥</span>
                             </div>
                         </div>
-                        
-                        <!-- Payer -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">پرداخت کننده</label>
                             <select id="entry-payer" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
@@ -113,8 +125,6 @@
                                 <option value="Fatima">Fatima</option>
                             </select>
                         </div>
-                        
-                        <!-- Method -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">متد پرداخت</label>
                             <select id="entry-method" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
@@ -124,13 +134,10 @@
                                 <option value="WeChat">WeChat</option>
                             </select>
                         </div>
-                        
-                        <!-- Category -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">دسته‌بندی</label>
                             <select id="entry-category" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
                                 <option value="" disabled selected>انتخاب کنید...</option>
-                                <option value="قبوض (برق آب گاز)">قبوض (برق آب گاز)</option>
                                 <option value="اجاره">اجاره</option>
                                 <option value="هزینه‌های ماشین">هزینه‌های ماشین</option>
                                 <option value="سفر">سفر</option>
@@ -139,24 +146,49 @@
                                 <option value="هزینه‌های مصرفی منزل">هزینه‌های مصرفی منزل</option>
                                 <option value="درمان">درمان</option>
                                 <option value="سرگرمی و تفریحات">سرگرمی و تفریحات</option>
+                                <option value="قبوض (برق آب گاز)">قبوض (برق آب گاز)</option>
                                 <option value="پوشاک">پوشاک</option>
                                 <option value="اشتراک‌های دیجیتال">اشتراک‌های دیجیتال</option>
                                 <option value="هزینه‌های اقامتی و اداری">هزینه‌های اقامتی و اداری</option>
                                 <option value="هدایا و مناسبت‌ها">هدایا و مناسبت‌ها</option>
                             </select>
                         </div>
-                        
-                        <!-- Description -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">توضیحات (اختیاری)</label>
                             <textarea id="entry-description" rows="2" placeholder="توضیحات بیشتر در مورد این هزینه..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3"></textarea>
                         </div>
                     </div>
-                    
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md flex justify-center items-center gap-2">
                         <i class="fa-solid fa-check"></i> ثبت نهایی اطلاعات
                     </button>
                 </form>
+            </div>
+        </section>
+
+        <!-- ================= TAB 1.5: RECORDS (ریز هزینه‌ها) ================= -->
+        <section id="tab-records" class="hidden animate-fade-in">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-blue-600"></i> ریز هزینه‌های ثبت شده
+                </h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-right text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3">تاریخ</th>
+                                <th class="px-4 py-3">دسته‌بندی</th>
+                                <th class="px-4 py-3">مبلغ (¥)</th>
+                                <th class="px-4 py-3">پرداخت‌کننده</th>
+                                <th class="px-4 py-3">متد</th>
+                                <th class="px-4 py-3 w-1/3">توضیحات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-table-body">
+                            <!-- Rows injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -175,7 +207,6 @@
                             <label class="block text-xs text-gray-500 mb-1">دسته‌بندی</label>
                             <select id="filter-category" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
                                 <option value="ALL">همه دسته‌ها</option>
-                                <!-- JS will populate this -->
                             </select>
                         </div>
                         <div>
@@ -201,11 +232,7 @@
 
                 <!-- Status Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Global Status -->
-                    <div id="report-global-status" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
-                        <!-- Populated by JS -->
-                    </div>
-                    <!-- Expense Breakdown -->
+                    <div id="report-global-status" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center"></div>
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <h4 class="font-bold text-gray-700 mb-3 text-center">خلاصه این ماه (فیلتر شده)</h4>
                         <div class="flex justify-around items-center h-full pb-4">
@@ -239,7 +266,7 @@
                     <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-bullseye text-green-600"></i> تخصیص بودجه سالانه
                     </h2>
-                    <p class="text-sm text-gray-500 mb-6">بودجه سالانه خود را برای هر دسته مشخص کنید. دسته‌های تخصیص یافته از منو حذف شده و در پایین نمایش داده می‌شوند.</p>
+                    <p class="text-sm text-gray-500 mb-6">بودجه سالانه خود را برای هر دسته مشخص کنید.</p>
                     
                     <form id="budget-form" class="flex flex-col md:flex-row gap-4 items-end">
                         <div class="flex-1 w-full">
@@ -249,7 +276,6 @@
                         <div class="flex-[2] w-full">
                             <label class="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
                             <select id="budget-category" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3">
-                                <!-- JS will populate available categories dynamically -->
                             </select>
                         </div>
                         <div class="flex-[2] w-full">
@@ -269,41 +295,11 @@
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xl font-bold text-gray-800">وضعیت مصرف بودجه در سال <span id="display-budget-year" class="text-blue-600"></span></h3>
                         <select id="view-budget-year" class="bg-gray-100 border-none rounded p-2 text-sm font-bold cursor-pointer" onchange="updateBudgetBarsView()">
-                            <!-- Populated dynamically -->
                         </select>
                     </div>
-                    
                     <div id="budget-bars-container" class="space-y-6">
-                        <!-- Horizontal bars will be injected here via JS -->
                         <div class="text-center text-gray-400 py-10">در حال بارگذاری اطلاعات...</div>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= TAB 4: EXPENSE HISTORY ================= -->
-        <section id="tab-history" class="hidden animate-fade-in">
-            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <i class="fa-solid fa-list-ul text-purple-600"></i> ریز هزینه‌های ثبت شده
-                </h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm">
-                                <th class="p-3 font-semibold">تاریخ</th>
-                                <th class="p-3 font-semibold">دسته‌بندی</th>
-                                <th class="p-3 font-semibold">مبلغ (¥)</th>
-                                <th class="p-3 font-semibold">پرداخت‌کننده</th>
-                                <th class="p-3 font-semibold">متد</th>
-                                <th class="p-3 font-semibold">توضیحات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-table-body" class="text-sm divide-y divide-gray-100">
-                            <!-- JS will populate rows here -->
-                            <tr><td colspan="6" class="text-center py-4 text-gray-400">در حال بارگذاری اطلاعات...</td></tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </section>
@@ -312,17 +308,16 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // ================= CHANGE 1: Import Email/Password Auth functions =================
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // === Constants & Config ===
         const ALL_CATEGORIES = [
-            "اجاره", "هزینه‌های ماشین", "سفر", "شخصی محمد", 
-            "شخصی فاطمه", "هزینه‌های مصرفی منزل", "درمان", "سرگرمی و تفریحات", 
+            "اجاره", "هزینه‌های ماشین", "سفر", "شخصی محمد", "شخصی فاطمه", 
+            "هزینه‌های مصرفی منزل", "درمان", "سرگرمی و تفریحات", 
             "قبوض (برق آب گاز)", "پوشاک", "اشتراک‌های دیجیتال", "هزینه‌های اقامتی و اداری", "هدایا و مناسبت‌ها"
         ];
 
-        // Format number to Yuan without unnecessary .00
         const formatYuan = (num) => {
             if (num === null || num === undefined) return '0';
             const parsed = parseFloat(num);
@@ -331,7 +326,6 @@
             return str.replace(/\.00$/, '').replace(/(\.[0-9])0$/, '$1');
         };
 
-        // UI Tab Switcher
         window.switchTab = function(tabId) {
             document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -341,17 +335,13 @@
 
             if (tabId === 'budget') updateBudgetBarsView();
             if (tabId === 'reports') renderReports();
-            if (tabId === 'history') renderHistory();
         };
 
-        // Default year setups
         const currentYear = new Date().getFullYear();
         document.getElementById('budget-year').value = currentYear;
-        
         const currentMonthStr = `${currentYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('filter-month').value = currentMonthStr;
 
-        // Populate Category Filters
         const filterCatSelect = document.getElementById('filter-category');
         ALL_CATEGORIES.forEach(cat => {
             const opt = document.createElement('option');
@@ -360,28 +350,16 @@
             filterCatSelect.appendChild(opt);
         });
 
-        /* 
-           FIREBASE INITIALIZATION
-           Supports both Immersive Environment and user's own GitHub Pages deployment.
-        */
-        let firebaseConfig;
-        const isImmersive = typeof __app_id !== 'undefined' && typeof __firebase_config !== 'undefined';
-        
-        if (isImmersive) {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            firebaseConfig = {
-                apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
-                authDomain: "budget-5074a.firebaseapp.com",
-                databaseURL: "https://budget-5074a-default-rtdb.europe-west1.firebasedatabase.app",
-                projectId: "budget-5074a",
-                storageBucket: "budget-5074a.firebasestorage.app",
-                messagingSenderId: "581233035544",
-                appId: "1:581233035544:web:954e065a16b3147109b66d"
-            };
-        }
+        // ================= FIREBASE CONFIG =================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
+            authDomain: "budget-5074a.firebaseapp.com",
+            projectId: "budget-5074a",
+            storageBucket: "budget-5074a.firebasestorage.app",
+            messagingSenderId: "581233035544",
+            appId: "1:581233035544:web:954e065a16b3147109b66d"
+        };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -391,29 +369,58 @@
         let budgetsData = [];
         let chartInstance = null;
 
-        async function initAuth() {
-            try {
-                if (isImmersive && typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                userId = auth.currentUser.uid;
-                document.getElementById('auth-status').innerHTML = `<span class="text-green-500">متصل به ابر <i class="fa-solid fa-cloud-check"></i></span>`;
-                
-                startDataListeners();
-            } catch (error) {
-                console.error("Auth Error:", error);
-                document.getElementById('auth-status').innerHTML = `<span class="text-red-500">خطا در اتصال</span>`;
-                updateBudgetDropdown(currentYear);
-            }
+        // ================= LOGOUT FUNCTION =================
+        window.logoutUser = function() {
+            signOut(auth).then(() => { location.reload(); });
         }
 
-        function getCollectionPath(colName) {
-            if (isImmersive) {
-                return `artifacts/${__app_id}/users/${userId}/${colName}`;
+        // ================= AUTH STATE LISTENER =================
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is logged in
+                userId = user.uid;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('auth-status').innerHTML = `
+                    <span class="text-green-500 font-bold"><i class="fa-solid fa-user-check"></i> متصل شد</span><br>
+                    <button onclick="logoutUser()" class="mt-2 text-xs text-red-400 hover:text-red-600 underline">خروج از حساب</button>
+                `;
+                startDataListeners();
+            } else {
+                // User is logged out
+                userId = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('auth-status').innerHTML = `<span class="text-gray-500">ورود الزامی است</span>`;
+                updateBudgetDropdown(currentYear);
             }
+        });
+
+        // ================= LOGIN SUBMISSION (MAGIC TRICK HERE) =================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error');
+            const submitBtn = e.target.querySelector('button');
+            
+            // Auto append @lotus.com to the typed username
+            const emailToSubmit = usernameInput + "@lotus.com";
+
+            submitBtn.innerText = "در حال ورود...";
+            submitBtn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, emailToSubmit, passwordInput);
+                // onAuthStateChanged will hide the login screen automatically
+            } catch (error) {
+                errorMsg.innerText = "نام کاربری یا رمز عبور اشتباه است.";
+                errorMsg.classList.remove('hidden');
+                submitBtn.innerText = "ورود";
+                submitBtn.disabled = false;
+            }
+        });
+
+        function getCollectionPath(colName) {
             return `dali_family_${colName}`; 
         }
 
@@ -421,18 +428,16 @@
             if (!userId) return;
 
             // Listen to Expenses
-            const expRef = collection(db, getCollectionPath('expenses'));
+            const expRef = query(collection(db, getCollectionPath('expenses')), orderBy("timestamp", "desc"));
             onSnapshot(expRef, (snapshot) => {
                 expensesData = [];
                 snapshot.forEach(doc => {
                     expensesData.push({ id: doc.id, ...doc.data() });
                 });
-                // Sort by date descending
-                expensesData.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
+                renderRecordsTable();
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) renderReports();
                 if(!document.getElementById('tab-budget').classList.contains('hidden')) renderBudgetBars();
-                if(!document.getElementById('tab-history').classList.contains('hidden')) renderHistory();
             }, (error) => { console.error("Error fetching expenses", error); });
 
             // Listen to Budgets
@@ -502,6 +507,7 @@
             renderBudgetBars();
         };
 
+        // Form Submit Expense
         document.getElementById('expense-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!userId) return alert('خطا: عدم اتصال به دیتابیس');
@@ -537,6 +543,7 @@
             }
         });
 
+        // Form Submit Budget
         document.getElementById('budget-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!userId) return alert('خطا: عدم اتصال به دیتابیس');
@@ -575,6 +582,33 @@
                 submitBtn.disabled = false;
             }
         });
+
+        function renderRecordsTable() {
+            const tbody = document.getElementById('records-table-body');
+            tbody.innerHTML = '';
+            
+            if (expensesData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">هنوز هزینه‌ای ثبت نشده است.</td></tr>';
+                return;
+            }
+
+            expensesData.forEach(exp => {
+                const tr = document.createElement('tr');
+                tr.className = "bg-white border-b hover:bg-gray-50";
+                
+                const descText = exp.description ? exp.description : '<span class="text-gray-300">-</span>';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap" dir="ltr">${exp.date}</td>
+                    <td class="px-4 py-3">${exp.category}</td>
+                    <td class="px-4 py-3 font-bold text-red-500" dir="ltr">${formatYuan(exp.amount)} ¥</td>
+                    <td class="px-4 py-3"><span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-200">${exp.payer}</span></td>
+                    <td class="px-4 py-3 text-xs">${exp.method}</td>
+                    <td class="px-4 py-3 text-xs text-gray-500 break-words">${descText}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
         function renderBudgetBars() {
             const container = document.getElementById('budget-bars-container');
@@ -710,13 +744,13 @@
                     labels: chartLabels,
                     datasets: [
                         {
-                            label: 'هزینه واقعی انجام شده (¥)',
+                            label: 'هزینه واقعی (¥)',
                             data: dataSpent,
                             backgroundColor: 'rgba(239, 68, 68, 0.8)',
                             borderRadius: 4
                         },
                         {
-                            label: 'بودجه مجاز ماهانه (¥)',
+                            label: 'بودجه مجاز (¥)',
                             data: dataBudget,
                             backgroundColor: 'rgba(34, 197, 94, 0.8)',
                             borderRadius: 4
@@ -739,44 +773,16 @@
                         }
                     },
                     scales: {
-                        y: { 
-                            beginAtZero: true,
-                            position: 'right'
-                        },
-                        x: {
-                            ticks: { font: { family: 'Vazirmatn' } }
-                        }
+                        y: { beginAtZero: true, position: 'right' },
+                        x: { ticks: { font: { family: 'Vazirmatn' } } }
                     }
                 }
             });
         }
-
-        function renderHistory() {
-            const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '';
-            
-            if (expensesData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-500">هنوز هزینه‌ای ثبت نشده است.</td></tr>';
-                return;
-            }
-
-            expensesData.forEach(exp => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-3 text-gray-700 dir-ltr text-right">${exp.date}</td>
-                    <td class="p-3 font-medium text-gray-800">${exp.category}</td>
-                    <td class="p-3 text-red-600 font-bold dir-ltr text-right">${formatYuan(exp.amount)}</td>
-                    <td class="p-3 text-gray-600">${exp.payer}</td>
-                    <td class="p-3 text-gray-600">${exp.method}</td>
-                    <td class="p-3 text-gray-500 max-w-[200px] truncate" title="${exp.description || '-'}">${exp.description || '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        initAuth();
-
     </script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(app_code)
