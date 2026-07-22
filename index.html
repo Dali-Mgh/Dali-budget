@@ -333,14 +333,17 @@
             firebaseConfig = JSON.parse(__firebase_config);
         } else {
             // [FOR GITHUB PAGES]: وقتی کد را در گیت‌هاب قرار می‌دهید این بخش را با کانفیگ خودتان جایگزین کنید.
-            firebaseConfig = {
-                apiKey: "YOUR_API_KEY",
-                authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-                projectId: "YOUR_PROJECT_ID",
-                storageBucket: "YOUR_PROJECT_ID.appspot.com",
-                messagingSenderId: "YOUR_SENDER_ID",
-                appId: "YOUR_APP_ID"
+            const firebaseConfig = {
+                apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
+                authDomain: "budget-5074a.firebaseapp.com",
+                databaseURL: "https://budget-5074a-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "budget-5074a",
+                storageBucket: "budget-5074a.firebasestorage.app",
+                messagingSenderId: "581233035544",
+                appId: "1:581233035544:web:954e065a16b3147109b66d"
             };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
         }
 
         const app = initializeApp(firebaseConfig);
