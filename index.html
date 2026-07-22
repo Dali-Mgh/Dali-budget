@@ -126,7 +126,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">دسته‌بندی</label>
                             <select id="entry-category" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
                                 <option value="" disabled selected>انتخاب کنید...</option>
-                                <option value="قبوض (تجمیعی)">قبوض (تجمیعی)</option>
                                 <option value="قبوض (برق آب گاز)">قبوض (برق آب گاز)</option>
                                 <option value="اجاره">اجاره</option>
                                 <option value="هزینه‌های ماشین">هزینه‌های ماشین</option>
@@ -144,11 +143,6 @@
                         </div>
                         
                         <!-- Description -->
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">توضیحات (اختیاری)</label>
-                            <textarea id="entry-description" rows="2" placeholder="توضیحات بیشتر در مورد این هزینه..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3"></textarea>
-                        </div>
-                    </div>
                     
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md flex justify-center items-center gap-2">
                         <i class="fa-solid fa-check"></i> ثبت نهایی اطلاعات
@@ -287,7 +281,7 @@
 
         // === Constants & Config ===
         const ALL_CATEGORIES = [
-            "قبوض (تجمیعی)", "اجاره", "هزینه‌های ماشین", "سفر", "شخصی محمد", 
+            "اجاره", "هزینه‌های ماشین", "سفر", "شخصی محمد", 
             "شخصی فاطمه", "هزینه‌های مصرفی منزل", "درمان", "سرگرمی و تفریحات", 
             "قبوض (برق آب گاز)", "پوشاک", "اشتراک‌های دیجیتال", "هزینه‌های اقامتی و اداری", "هدایا و مناسبت‌ها"
         ];
@@ -342,6 +336,7 @@
             firebaseConfig = {
                 apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
                 authDomain: "budget-5074a.firebaseapp.com",
+                databaseURL: "https://budget-5074a-default-rtdb.europe-west1.firebasedatabase.app",
                 projectId: "budget-5074a",
                 storageBucket: "budget-5074a.firebasestorage.app",
                 messagingSenderId: "581233035544",
@@ -480,7 +475,6 @@
                 payer: document.getElementById('entry-payer').value,
                 method: document.getElementById('entry-method').value,
                 category: document.getElementById('entry-category').value,
-                description: document.getElementById('entry-description').value,
                 timestamp: new Date().getTime()
             };
 
