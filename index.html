@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>سامانه بودجه ارزی خانواده</title>
     
     <!-- Tailwind CSS -->
@@ -20,23 +20,34 @@
             background-color: #f3f4f6;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            /* جلوگیری از اسکرول افقی */
+            overflow-x: hidden; 
+            /* فاصله دادن از پایین برای منوی موبایل */
+            padding-bottom: 70px;
+        }
+
+        /* در دسکتاپ فاصله پایین نیاز نیست */
+        @media (min-width: 768px) {
+            body { padding-bottom: 0; }
         }
         
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px;}
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        .nav-item.active { background-color: #2563eb; color: #ffffff; }
+        .nav-item-desktop.active { background-color: #2563eb; color: #ffffff; }
+        .nav-item-mobile.active { color: #2563eb; }
+        .nav-item-mobile.active i { transform: scale(1.1); transition: 0.2s; }
+        
         input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 2px #3b82f6; }
     </style>
 </head>
-<body class="flex">
+<body class="flex flex-col md:flex-row min-h-screen">
 
     <!-- ================= LOGIN SCREEN ================= -->
-    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-96 max-w-[90%]">
+    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50 px-4">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-sm">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
                     <i class="fa-solid fa-lock text-2xl text-white"></i>
@@ -61,8 +72,8 @@
         </div>
     </div>
 
-    <!-- Sidebar (Fixed Right) -->
-    <aside class="fixed top-0 right-0 w-64 h-screen bg-gray-900 text-white shadow-xl z-20 flex flex-col transition-all">
+    <!-- ================= DESKTOP SIDEBAR ================= -->
+    <aside class="hidden md:flex fixed top-0 right-0 w-64 h-screen bg-gray-900 text-white shadow-xl z-20 flex-col transition-all">
         <div class="p-6 text-center border-b border-gray-700">
             <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <i class="fa-solid fa-wallet text-2xl text-white"></i>
@@ -72,62 +83,98 @@
         </div>
         
         <nav class="flex-1 p-4 space-y-2">
-            <button onclick="switchTab('entry')" id="nav-entry" class="nav-item active w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+            <button onclick="switchTab('entry')" id="nav-entry-desktop" class="nav-item-desktop active w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
                 <i class="fa-solid fa-plus-circle w-5"></i>
                 <span class="font-medium text-right">ثبت هزینه</span>
             </button>
-            <button onclick="switchTab('records')" id="nav-records" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+            <button onclick="switchTab('records')" id="nav-records-desktop" class="nav-item-desktop w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
                 <i class="fa-solid fa-list text-lg w-5"></i>
                 <span class="font-medium text-right">ریز هزینه‌ها</span>
             </button>
-            <button onclick="switchTab('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+            <button onclick="switchTab('reports')" id="nav-reports-desktop" class="nav-item-desktop w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
                 <i class="fa-solid fa-chart-line w-5"></i>
                 <span class="font-medium text-right">گزارش و نمودارها</span>
             </button>
-            <button onclick="switchTab('budget')" id="nav-budget" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+            <button onclick="switchTab('budget')" id="nav-budget-desktop" class="nav-item-desktop w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
                 <i class="fa-solid fa-bullseye w-5"></i>
-                <span class="font-medium text-right">تعیین بودجه سالانه</span>
+                <span class="font-medium text-right">تعیین بودجه</span>
             </button>
         </nav>
         
         <div class="p-4 border-t border-gray-700 text-center text-xs text-gray-500">
-            <span id="auth-status">در حال بررسی ورود...</span>
+            <span id="auth-status-desktop">در حال بررسی ورود...</span>
         </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <main class="mr-64 w-[calc(100%-16rem)] min-h-screen p-8">
+    <!-- ================= MOBILE HEADER ================= -->
+    <header class="md:hidden bg-gray-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-20 w-full">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-wallet text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold leading-tight">بودجه ارزی خانواده</h1>
+                <p class="text-[10px] text-gray-400">مدیریت مالی به یوان (¥)</p>
+            </div>
+        </div>
+        <div class="text-[10px] text-left" id="auth-status-mobile">
+            <!-- وضعیت ورود پر می‌شود -->
+        </div>
+    </header>
+
+    <!-- ================= MOBILE BOTTOM NAV ================= -->
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-5px_10px_rgba(0,0,0,0.05)] z-30 flex justify-around items-center">
+        <button onclick="switchTab('entry')" id="nav-entry-mobile" class="nav-item-mobile active flex-1 py-3 px-1 flex flex-col items-center gap-1 text-gray-500 transition-colors">
+            <i class="fa-solid fa-plus-circle text-xl"></i>
+            <span class="text-[10px] font-medium">ثبت هزینه</span>
+        </button>
+        <button onclick="switchTab('records')" id="nav-records-mobile" class="nav-item-mobile flex-1 py-3 px-1 flex flex-col items-center gap-1 text-gray-500 transition-colors">
+            <i class="fa-solid fa-list text-xl"></i>
+            <span class="text-[10px] font-medium">هزینه‌ها</span>
+        </button>
+        <button onclick="switchTab('reports')" id="nav-reports-mobile" class="nav-item-mobile flex-1 py-3 px-1 flex flex-col items-center gap-1 text-gray-500 transition-colors">
+            <i class="fa-solid fa-chart-line text-xl"></i>
+            <span class="text-[10px] font-medium">گزارشات</span>
+        </button>
+        <button onclick="switchTab('budget')" id="nav-budget-mobile" class="nav-item-mobile flex-1 py-3 px-1 flex flex-col items-center gap-1 text-gray-500 transition-colors">
+            <i class="fa-solid fa-bullseye text-xl"></i>
+            <span class="text-[10px] font-medium">بودجه</span>
+        </button>
+    </nav>
+
+    <!-- ================= MAIN CONTENT AREA ================= -->
+    <main class="w-full md:mr-64 md:w-[calc(100%-16rem)] p-4 md:p-8">
         
         <!-- ================= TAB 1: EXPENSE ENTRY ================= -->
         <section id="tab-entry" class="block animate-fade-in">
-            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-8">
+                <h2 class="text-lg md:text-2xl font-bold text-gray-800 mb-5 md:mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-file-invoice-dollar text-blue-600"></i> ثبت هزینه جدید
                 </h2>
                 
-                <form id="expense-form" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form id="expense-form" class="space-y-4 md:space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">تاریخ پرداخت</label>
-                            <input type="date" id="entry-date" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-left dir-ltr">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">تاریخ پرداخت</label>
+                            <input type="date" id="entry-date" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2.5 md:p-3 text-left dir-ltr text-sm md:text-base">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ (یوان ¥)</label>
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">مبلغ (یوان ¥)</label>
                             <div class="relative">
-                                <input type="number" id="entry-amount" step="0.01" min="0" required placeholder="مثال: 150.50" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 pr-10 text-left dir-ltr">
-                                <span class="absolute right-3 top-3.5 text-gray-500 font-bold">¥</span>
+                                <input type="number" id="entry-amount" step="0.01" min="0" required placeholder="مثال: 150.50" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2.5 md:p-3 pr-8 md:pr-10 text-left dir-ltr text-sm md:text-base">
+                                <span class="absolute right-3 top-3 md:top-3.5 text-gray-500 font-bold">¥</span>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">پرداخت کننده</label>
-                            <select id="entry-payer" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">پرداخت کننده</label>
+                            <select id="entry-payer" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2.5 md:p-3 cursor-pointer text-sm md:text-base">
                                 <option value="Dali">Dali</option>
                                 <option value="Fatima">Fatima</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">متد پرداخت</label>
-                            <select id="entry-method" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">متد پرداخت</label>
+                            <select id="entry-method" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2.5 md:p-3 cursor-pointer text-sm md:text-base">
                                 <option value="Alipay">Alipay</option>
                                 <option value="Bank">Bank</option>
                                 <option value="Cash">Cash</option>
@@ -135,8 +182,8 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">دسته‌بندی</label>
-                            <select id="entry-category" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">دسته‌بندی</label>
+                            <select id="entry-category" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2.5 md:p-3 cursor-pointer text-sm md:text-base">
                                 <option value="" disabled selected>انتخاب کنید...</option>
                                 <option value="اجاره">اجاره</option>
                                 <option value="هزینه‌های ماشین">هزینه‌های ماشین</option>
@@ -154,11 +201,11 @@
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">توضیحات (اختیاری)</label>
-                            <textarea id="entry-description" rows="2" placeholder="توضیحات بیشتر در مورد این هزینه..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3"></textarea>
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">توضیحات (اختیاری)</label>
+                            <textarea id="entry-description" rows="2" placeholder="توضیحات بیشتر..." class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-2.5 md:p-3 text-sm md:text-base"></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md flex justify-center items-center gap-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 md:py-4 px-4 rounded-lg transition-colors shadow-md flex justify-center items-center gap-2 mt-2 md:mt-4 text-sm md:text-base">
                         <i class="fa-solid fa-check"></i> ثبت نهایی اطلاعات
                     </button>
                 </form>
@@ -167,59 +214,62 @@
 
         <!-- ================= TAB 1.5: RECORDS (ریز هزینه‌ها) ================= -->
         <section id="tab-records" class="hidden animate-fade-in">
-            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8">
+                <h2 class="text-lg md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-list text-blue-600"></i> ریز هزینه‌های ثبت شده
                 </h2>
                 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-right text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3">تاریخ</th>
-                                <th class="px-4 py-3">دسته‌بندی</th>
-                                <th class="px-4 py-3">مبلغ (¥)</th>
-                                <th class="px-4 py-3">پرداخت‌کننده</th>
-                                <th class="px-4 py-3">متد</th>
-                                <th class="px-4 py-3 w-1/3">توضیحات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="records-table-body">
-                            <!-- Rows injected via JS -->
-                        </tbody>
-                    </table>
+                <!-- Wrapper for horizontal scrolling on mobile -->
+                <div class="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+                    <div class="min-w-[600px] md:min-w-full">
+                        <table class="w-full text-xs md:text-sm text-right text-gray-500">
+                            <thead class="text-[10px] md:text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">تاریخ</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">دسته‌بندی</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">مبلغ (¥)</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">شخص</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">متد</th>
+                                    <th class="px-2 md:px-4 py-2 md:py-3 w-1/3 min-w-[150px]">توضیحات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-table-body">
+                                <!-- Rows injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ================= TAB 2: REPORTS & CHARTS ================= -->
         <section id="tab-reports" class="hidden animate-fade-in">
-            <div class="max-w-6xl mx-auto space-y-6">
+            <div class="max-w-6xl mx-auto space-y-4 md:space-y-6">
                 <!-- Filters -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fa-solid fa-filter text-gray-500 ml-1"></i> فیلتر گزارشات</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">سال ماه (مثال: 2026-07)</label>
-                            <input type="month" id="filter-month" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+                    <h3 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4"><i class="fa-solid fa-filter text-gray-500 ml-1"></i> فیلتر گزارشات</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-[10px] md:text-xs text-gray-500 mb-1">ماه (مثال: 2026-07)</label>
+                            <input type="month" id="filter-month" class="w-full border border-gray-300 rounded-lg p-2 text-xs md:text-sm" onchange="renderReports()">
                         </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">دسته‌بندی</label>
-                            <select id="filter-category" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-[10px] md:text-xs text-gray-500 mb-1">دسته‌بندی</label>
+                            <select id="filter-category" class="w-full border border-gray-300 rounded-lg p-2 text-xs md:text-sm" onchange="renderReports()">
                                 <option value="ALL">همه دسته‌ها</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">پرداخت کننده</label>
-                            <select id="filter-payer" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
-                                <option value="ALL">هر دو</option>
+                            <label class="block text-[10px] md:text-xs text-gray-500 mb-1">شخص</label>
+                            <select id="filter-payer" class="w-full border border-gray-300 rounded-lg p-2 text-xs md:text-sm" onchange="renderReports()">
+                                <option value="ALL">همه</option>
                                 <option value="Dali">Dali</option>
                                 <option value="Fatima">Fatima</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs text-gray-500 mb-1">متد پرداخت</label>
-                            <select id="filter-method" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                            <label class="block text-[10px] md:text-xs text-gray-500 mb-1">متد</label>
+                            <select id="filter-method" class="w-full border border-gray-300 rounded-lg p-2 text-xs md:text-sm" onchange="renderReports()">
                                 <option value="ALL">همه موارد</option>
                                 <option value="Alipay">Alipay</option>
                                 <option value="Bank">Bank</option>
@@ -231,27 +281,28 @@
                 </div>
 
                 <!-- Status Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div id="report-global-status" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center"></div>
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h4 class="font-bold text-gray-700 mb-3 text-center">خلاصه این ماه (فیلتر شده)</h4>
-                        <div class="flex justify-around items-center h-full pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div id="report-global-status" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 text-center flex flex-col justify-center items-center"></div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+                        <h4 class="font-bold text-gray-700 mb-3 text-center text-sm md:text-base">خلاصه این ماه</h4>
+                        <div class="flex justify-around items-center h-full pb-2 md:pb-4">
                             <div class="text-center">
-                                <p class="text-sm text-gray-500">جمع کل هزینه‌ها</p>
-                                <p id="report-total-spent" class="text-2xl font-bold text-red-500">0 ¥</p>
+                                <p class="text-xs md:text-sm text-gray-500">جمع هزینه‌ها</p>
+                                <p id="report-total-spent" class="text-xl md:text-2xl font-bold text-red-500 dir-ltr">0 ¥</p>
                             </div>
-                            <div class="text-center">
-                                <p class="text-sm text-gray-500">بودجه مجاز ماهانه</p>
-                                <p id="report-total-budget" class="text-2xl font-bold text-green-500">0 ¥</p>
+                            <div class="text-center border-r md:border-r-2 border-gray-100 pr-4 md:pr-8">
+                                <p class="text-xs md:text-sm text-gray-500">بودجه مجاز</p>
+                                <p id="report-total-budget" class="text-xl md:text-2xl font-bold text-green-500 dir-ltr">0 ¥</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Chart -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">نمودار مقایسه هزینه و بودجه (تفکیک دسته‌بندی)</h3>
-                    <div class="w-full h-[400px]">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 overflow-hidden">
+                    <h3 class="text-sm md:text-lg font-bold text-gray-800 mb-4 text-center">نمودار مقایسه (هزینه / بودجه)</h3>
+                    <!-- Ensure chart scales correctly on mobile -->
+                    <div class="relative w-full h-[250px] md:h-[400px]">
                         <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
@@ -262,28 +313,28 @@
         <section id="tab-budget" class="hidden animate-fade-in">
             <div class="max-w-4xl mx-auto">
                 <!-- Set Budget Form -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-8 mb-6 md:mb-8">
+                    <h2 class="text-lg md:text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-bullseye text-green-600"></i> تخصیص بودجه سالانه
                     </h2>
-                    <p class="text-sm text-gray-500 mb-6">بودجه سالانه خود را برای هر دسته مشخص کنید.</p>
+                    <p class="text-[11px] md:text-sm text-gray-500 mb-4 md:mb-6">سقف مبلغی که در کل سال برای هر دسته مجاز است را وارد کنید.</p>
                     
-                    <form id="budget-form" class="flex flex-col md:flex-row gap-4 items-end">
-                        <div class="flex-1 w-full">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">سال</label>
-                            <input type="number" id="budget-year" min="2020" max="2100" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3">
+                    <form id="budget-form" class="flex flex-col md:flex-row gap-3 md:gap-4 items-end">
+                        <div class="w-full md:flex-1">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">سال</label>
+                            <input type="number" id="budget-year" min="2020" max="2100" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 md:p-3 text-sm md:text-base">
                         </div>
-                        <div class="flex-[2] w-full">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
-                            <select id="budget-category" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3">
+                        <div class="w-full md:flex-[2]">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">دسته‌بندی</label>
+                            <select id="budget-category" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 md:p-3 text-sm md:text-base">
                             </select>
                         </div>
-                        <div class="flex-[2] w-full">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">مبلغ سالانه (¥)</label>
-                            <input type="number" id="budget-amount" step="0.01" min="1" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 dir-ltr text-left">
+                        <div class="w-full md:flex-[2]">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">مبلغ سالانه (¥)</label>
+                            <input type="number" id="budget-amount" step="0.01" min="1" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 md:p-3 dir-ltr text-left text-sm md:text-base">
                         </div>
-                        <div class="w-full md:w-auto">
-                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md">
+                        <div class="w-full md:w-auto mt-2 md:mt-0">
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 md:py-3 px-6 rounded-lg transition-colors shadow-md text-sm md:text-base">
                                 تایید
                             </button>
                         </div>
@@ -291,14 +342,14 @@
                 </div>
 
                 <!-- Budget Bars Display -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">وضعیت مصرف بودجه در سال <span id="display-budget-year" class="text-blue-600"></span></h3>
-                        <select id="view-budget-year" class="bg-gray-100 border-none rounded p-2 text-sm font-bold cursor-pointer" onchange="updateBudgetBarsView()">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-8">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 sm:gap-0">
+                        <h3 class="text-base md:text-xl font-bold text-gray-800">وضعیت بودجه در سال <span id="display-budget-year" class="text-blue-600"></span></h3>
+                        <select id="view-budget-year" class="w-full sm:w-auto bg-gray-100 border-none rounded-lg p-2 text-xs md:text-sm font-bold cursor-pointer" onchange="updateBudgetBarsView()">
                         </select>
                     </div>
-                    <div id="budget-bars-container" class="space-y-6">
-                        <div class="text-center text-gray-400 py-10">در حال بارگذاری اطلاعات...</div>
+                    <div id="budget-bars-container" class="space-y-4 md:space-y-6">
+                        <div class="text-center text-gray-400 py-10 text-sm">در حال بارگذاری اطلاعات...</div>
                     </div>
                 </div>
             </div>
@@ -329,8 +380,21 @@
             document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('nav-' + tabId).classList.add('active');
+            // Handle Desktop Nav
+            document.querySelectorAll('.nav-item-desktop').forEach(btn => btn.classList.remove('active'));
+            const dBtn = document.getElementById('nav-' + tabId + '-desktop');
+            if(dBtn) dBtn.classList.add('active');
+
+            // Handle Mobile Nav
+            document.querySelectorAll('.nav-item-mobile').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.replace('text-blue-600', 'text-gray-500');
+            });
+            const mBtn = document.getElementById('nav-' + tabId + '-mobile');
+            if(mBtn) {
+                mBtn.classList.add('active');
+                mBtn.classList.replace('text-gray-500', 'text-blue-600');
+            }
 
             if (tabId === 'budget') updateBudgetBarsView();
             if (tabId === 'reports') renderReports();
@@ -368,32 +432,37 @@
         let budgetsData = [];
         let chartInstance = null;
 
-        // ================= LOGOUT FUNCTION =================
         window.logoutUser = function() {
             signOut(auth).then(() => { location.reload(); });
         }
 
-        // ================= AUTH STATE LISTENER =================
+        function updateAuthUI(isLoggedIn) {
+            const dStatus = document.getElementById('auth-status-desktop');
+            const mStatus = document.getElementById('auth-status-mobile');
+            
+            if(isLoggedIn) {
+                if(dStatus) dStatus.innerHTML = `<span class="text-green-500 font-bold"><i class="fa-solid fa-user-check"></i> متصل شد</span><br><button onclick="logoutUser()" class="mt-2 text-xs text-red-400 hover:text-red-600 underline">خروج از حساب</button>`;
+                if(mStatus) mStatus.innerHTML = `<span class="text-green-400 font-bold flex items-center gap-1"><i class="fa-solid fa-circle text-[6px]"></i> متصل</span><button onclick="logoutUser()" class="text-red-400 underline mt-0.5 block">خروج</button>`;
+            } else {
+                if(dStatus) dStatus.innerHTML = `<span class="text-gray-500">ورود الزامی است</span>`;
+                if(mStatus) mStatus.innerHTML = `<span class="text-gray-400">نیازمند ورود</span>`;
+            }
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is logged in
                 userId = user.uid;
                 document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('auth-status').innerHTML = `
-                    <span class="text-green-500 font-bold"><i class="fa-solid fa-user-check"></i> متصل شد</span><br>
-                    <button onclick="logoutUser()" class="mt-2 text-xs text-red-400 hover:text-red-600 underline">خروج از حساب</button>
-                `;
+                updateAuthUI(true);
                 startDataListeners();
             } else {
-                // User is logged out
                 userId = null;
                 document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('auth-status').innerHTML = `<span class="text-gray-500">ورود الزامی است</span>`;
+                updateAuthUI(false);
                 updateBudgetDropdown(currentYear);
             }
         });
 
-        // ================= LOGIN SUBMISSION (MAGIC TRICK HERE) =================
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const usernameInput = document.getElementById('login-username').value.trim();
@@ -401,7 +470,6 @@
             const errorMsg = document.getElementById('login-error');
             const submitBtn = e.target.querySelector('button');
             
-            // Auto append @lotus.com to the typed username
             const emailToSubmit = usernameInput + "@lotus.com";
 
             submitBtn.innerText = "در حال ورود...";
@@ -410,7 +478,6 @@
 
             try {
                 await signInWithEmailAndPassword(auth, emailToSubmit, passwordInput);
-                // onAuthStateChanged will hide the login screen automatically
             } catch (error) {
                 errorMsg.innerText = "نام کاربری یا رمز عبور اشتباه است.";
                 errorMsg.classList.remove('hidden');
@@ -426,7 +493,6 @@
         function startDataListeners() {
             if (!userId) return;
 
-            // Listen to Expenses
             const expRef = query(collection(db, getCollectionPath('expenses')), orderBy("timestamp", "desc"));
             onSnapshot(expRef, (snapshot) => {
                 expensesData = [];
@@ -439,7 +505,6 @@
                 if(!document.getElementById('tab-budget').classList.contains('hidden')) renderBudgetBars();
             }, (error) => { console.error("Error fetching expenses", error); });
 
-            // Listen to Budgets
             const budRef = collection(db, getCollectionPath('budgets'));
             onSnapshot(budRef, (snapshot) => {
                 budgetsData = [];
@@ -480,7 +545,7 @@
             });
 
             if(!hasAvailable) {
-                dropdown.innerHTML = '<option value="" disabled>همه دسته‌ها برای این سال تعیین شده‌اند</option>';
+                dropdown.innerHTML = '<option value="" disabled>همه دسته‌ها انتخاب شده‌اند</option>';
             }
         }
 
@@ -533,10 +598,20 @@
                 await addDoc(collection(db, getCollectionPath('expenses')), payload);
                 e.target.reset();
                 document.getElementById('entry-date').value = dateStr;
-                alert('✅ هزینه با موفقیت ثبت شد');
+                
+                // Show toast effect on button
+                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> با موفقیت ثبت شد';
+                submitBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                submitBtn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+                
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                    submitBtn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                    submitBtn.disabled = false;
+                }, 2000);
             } catch (error) {
                 alert('❌ خطا در ثبت اطلاعات: ' + error.message);
-            } finally {
                 submitBtn.innerHTML = originalHtml;
                 submitBtn.disabled = false;
             }
@@ -557,7 +632,9 @@
             const payload = { year, category, amount };
 
             const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHtml = submitBtn.innerHTML;
             submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>...';
 
             try {
                 await setDoc(doc(db, getCollectionPath('budgets'), docId), payload);
@@ -575,9 +652,16 @@
                     viewSelector.value = year.toString();
                 }
                 
+                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> ذخیره شد';
+                submitBtn.classList.replace('bg-green-600', 'bg-emerald-500');
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.classList.replace('bg-emerald-500', 'bg-green-600');
+                    submitBtn.disabled = false;
+                }, 1500);
             } catch (error) {
                 alert('❌ خطا در ذخیره بودجه: ' + error.message);
-            } finally {
+                submitBtn.innerHTML = originalHtml;
                 submitBtn.disabled = false;
             }
         });
@@ -587,7 +671,7 @@
             tbody.innerHTML = '';
             
             if (expensesData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">هنوز هزینه‌ای ثبت نشده است.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-2 py-8 text-center text-gray-400 text-xs md:text-sm">هنوز هزینه‌ای ثبت نشده است.</td></tr>';
                 return;
             }
 
@@ -598,12 +682,12 @@
                 const descText = exp.description ? exp.description : '<span class="text-gray-300">-</span>';
                 
                 tr.innerHTML = `
-                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap" dir="ltr">${exp.date}</td>
-                    <td class="px-4 py-3">${exp.category}</td>
-                    <td class="px-4 py-3 font-bold text-red-500" dir="ltr">${formatYuan(exp.amount)} ¥</td>
-                    <td class="px-4 py-3"><span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded border border-gray-200">${exp.payer}</span></td>
-                    <td class="px-4 py-3 text-xs">${exp.method}</td>
-                    <td class="px-4 py-3 text-xs text-gray-500 break-words">${descText}</td>
+                    <td class="px-2 md:px-4 py-2 md:py-3 font-medium text-gray-900 whitespace-nowrap text-[10px] md:text-sm" dir="ltr">${exp.date}</td>
+                    <td class="px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-sm whitespace-nowrap">${exp.category}</td>
+                    <td class="px-2 md:px-4 py-2 md:py-3 font-bold text-red-500 whitespace-nowrap text-[10px] md:text-sm" dir="ltr">${formatYuan(exp.amount)} ¥</td>
+                    <td class="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap"><span class="bg-gray-100 text-gray-800 text-[9px] md:text-xs font-medium px-1.5 py-0.5 rounded border border-gray-200">${exp.payer}</span></td>
+                    <td class="px-2 md:px-4 py-2 md:py-3 text-[9px] md:text-xs whitespace-nowrap">${exp.method}</td>
+                    <td class="px-2 md:px-4 py-2 md:py-3 text-[10px] md:text-xs text-gray-500 min-w-[120px] max-w-[200px] truncate" title="${descText}">${descText}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -621,7 +705,7 @@
             const yearBudgets = budgetsData.filter(b => b.year === selectedYear);
             
             if(yearBudgets.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-500 py-10 bg-gray-50 rounded-xl">هنوز بودجه‌ای برای این سال ثبت نشده است.</div>';
+                container.innerHTML = '<div class="text-center text-gray-500 py-10 bg-gray-50 rounded-xl text-xs md:text-sm">هنوز بودجه‌ای برای این سال ثبت نشده است.</div>';
                 return;
             }
 
@@ -641,15 +725,15 @@
                 const spentColor = percent > 100 ? 'bg-red-600' : (percent > 85 ? 'bg-orange-500' : 'bg-red-500');
                 
                 const html = `
-                <div class="mb-5">
-                    <div class="flex justify-between mb-2 text-sm">
-                        <span class="font-bold text-gray-700">${b.category} <span class="text-xs text-gray-400 font-normal mr-2">(سقف: ${formatYuan(b.amount)} ¥)</span></span>
-                        <span class="font-bold text-gray-700" dir="ltr">${formatYuan(spent)} ¥</span>
+                <div class="mb-4 md:mb-5">
+                    <div class="flex flex-col sm:flex-row justify-between mb-1.5 sm:mb-2 text-xs md:text-sm gap-1 sm:gap-0">
+                        <span class="font-bold text-gray-700 truncate">${b.category} <span class="text-[9px] md:text-xs text-gray-400 font-normal mr-1">(سقف: ${formatYuan(b.amount)} ¥)</span></span>
+                        <span class="font-bold text-gray-700 self-start sm:self-auto" dir="ltr">${formatYuan(spent)} ¥</span>
                     </div>
-                    <div class="w-full bg-green-500 rounded-full h-5 relative overflow-hidden shadow-inner flex items-center">
+                    <div class="w-full bg-green-500 rounded-full h-4 md:h-5 relative overflow-hidden shadow-inner flex items-center">
                         <div class="${spentColor} h-full absolute right-0 top-0 transition-all duration-1000 ease-out flex items-center justify-start overflow-visible" style="width: ${clampedPercent}%">
                         </div>
-                        <div class="absolute left-2 text-xs font-bold text-white z-10 text-shadow-sm shadow-black">${formatYuan(b.amount - spent)} ¥ باقی‌مانده</div>
+                        <div class="absolute left-2 text-[9px] md:text-xs font-bold text-white z-10 text-shadow-sm shadow-black">${formatYuan(b.amount - spent)} ¥ باقی‌مانده</div>
                     </div>
                 </div>`;
                 container.insertAdjacentHTML('beforeend', html);
@@ -700,27 +784,27 @@
             if (totalMonthlyBudget === 0) {
                  statusContainer.innerHTML = `
                     <div class="text-gray-500">
-                        <i class="fa-solid fa-circle-info text-2xl mb-2"></i>
-                        <h4 class="font-bold text-lg">بودجه‌ای تعریف نشده</h4>
-                        <p class="text-sm mt-1">برای مشاهده وضعیت، ابتدا بودجه سال ${yearInt} را تعیین کنید.</p>
+                        <i class="fa-solid fa-circle-info text-2xl md:text-3xl mb-2"></i>
+                        <h4 class="font-bold text-sm md:text-lg">بودجه‌ای تعریف نشده</h4>
+                        <p class="text-[10px] md:text-sm mt-1">برای مشاهده وضعیت، ابتدا بودجه سال ${yearInt} را تعیین کنید.</p>
                     </div>`;
-                 statusContainer.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center";
+                 statusContainer.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 text-center flex flex-col justify-center items-center";
             } else if (totalSpent <= totalMonthlyBudget) {
                  statusContainer.innerHTML = `
                     <div class="text-green-700">
-                        <i class="fa-solid fa-face-smile-beam text-3xl mb-2"></i>
-                        <h4 class="font-bold text-xl">عالی! عقب‌تر از سقف بودجه</h4>
-                        <p class="text-sm mt-1">شما ${formatYuan(totalMonthlyBudget - totalSpent)} یوان کمتر از بودجه مجاز مصرف کرده‌اید.</p>
+                        <i class="fa-solid fa-face-smile-beam text-3xl md:text-4xl mb-2"></i>
+                        <h4 class="font-bold text-base md:text-xl">عالی! عقب‌تر از سقف بودجه</h4>
+                        <p class="text-[10px] md:text-sm mt-1">شما ${formatYuan(totalMonthlyBudget - totalSpent)} یوان کمتر از بودجه مجاز مصرف کرده‌اید.</p>
                     </div>`;
-                 statusContainer.className = "bg-green-50 rounded-2xl shadow-sm border border-green-200 p-6 text-center";
+                 statusContainer.className = "bg-green-50 rounded-2xl shadow-sm border border-green-200 p-4 md:p-6 text-center flex flex-col justify-center items-center";
             } else {
                  statusContainer.innerHTML = `
                     <div class="text-red-700">
-                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i>
-                        <h4 class="font-bold text-xl">هشدار! عبور از بودجه</h4>
-                        <p class="text-sm mt-1">شما ${formatYuan(totalSpent - totalMonthlyBudget)} یوان بیشتر از سقف مجاز این ماه هزینه کرده‌اید.</p>
+                        <i class="fa-solid fa-triangle-exclamation text-3xl md:text-4xl mb-2"></i>
+                        <h4 class="font-bold text-base md:text-xl">هشدار! عبور از بودجه</h4>
+                        <p class="text-[10px] md:text-sm mt-1">شما ${formatYuan(totalSpent - totalMonthlyBudget)} یوان بیشتر از سقف مجاز این ماه هزینه کرده‌اید.</p>
                     </div>`;
-                 statusContainer.className = "bg-red-50 rounded-2xl shadow-sm border border-red-200 p-6 text-center";
+                 statusContainer.className = "bg-red-50 rounded-2xl shadow-sm border border-red-200 p-4 md:p-6 text-center flex flex-col justify-center items-center";
             }
 
             const ctx = document.getElementById('monthlyChart').getContext('2d');
@@ -735,6 +819,10 @@
 
             const dataSpent = chartLabels.map(c => expByCat[c] || 0);
             const dataBudget = chartLabels.map(c => budgetByCat[c] || 0);
+
+            // Responsive font sizes for chart
+            const isMobile = window.innerWidth < 768;
+            const chartFontSize = isMobile ? 9 : 12;
 
             Chart.defaults.font.family = 'Vazirmatn';
             chartInstance = new Chart(ctx, {
@@ -760,10 +848,14 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', rtl: true, labels: { font: { family: 'Vazirmatn' } } },
+                        legend: { 
+                            position: 'top', 
+                            rtl: true, 
+                            labels: { font: { family: 'Vazirmatn', size: chartFontSize } } 
+                        },
                         tooltip: {
-                            titleFont: { family: 'Vazirmatn' },
-                            bodyFont: { family: 'Vazirmatn' },
+                            titleFont: { family: 'Vazirmatn', size: chartFontSize + 2 },
+                            bodyFont: { family: 'Vazirmatn', size: chartFontSize + 2 },
                             callbacks: {
                                 label: function(context) {
                                     return context.dataset.label + ': ' + formatYuan(context.raw) + ' ¥';
@@ -772,8 +864,18 @@
                         }
                     },
                     scales: {
-                        y: { beginAtZero: true, position: 'right' },
-                        x: { ticks: { font: { family: 'Vazirmatn' } } }
+                        y: { 
+                            beginAtZero: true, 
+                            position: 'right',
+                            ticks: { font: { size: chartFontSize } }
+                        },
+                        x: { 
+                            ticks: { 
+                                font: { family: 'Vazirmatn', size: chartFontSize },
+                                maxRotation: 45,
+                                minRotation: 45
+                            } 
+                        }
                     }
                 }
             });
