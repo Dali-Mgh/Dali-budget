@@ -325,6 +325,7 @@
 
         /* 
            FIREBASE INITIALIZATION
+           Supports both Immersive Environment and user's own GitHub Pages deployment.
         */
         let firebaseConfig;
         const isImmersive = typeof __app_id !== 'undefined' && typeof __firebase_config !== 'undefined';
@@ -332,8 +333,7 @@
         if (isImmersive) {
             firebaseConfig = JSON.parse(__firebase_config);
         } else {
-            // [FOR GITHUB PAGES]: وقتی کد را در گیت‌هاب قرار می‌دهید این بخش را با کانفیگ خودتان جایگزین کنید.
-            const firebaseConfig = {
+            firebaseConfig = {
                 apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
                 authDomain: "budget-5074a.firebaseapp.com",
                 databaseURL: "https://budget-5074a-default-rtdb.europe-west1.firebasedatabase.app",
@@ -342,10 +342,9 @@
                 messagingSenderId: "581233035544",
                 appId: "1:581233035544:web:954e065a16b3147109b66d"
             };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
         }
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
