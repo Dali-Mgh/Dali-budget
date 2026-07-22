@@ -3,174 +3,713 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدیریت بودجه ارزی خانوادگی (¥)</title>
+    <title>سامانه بودجه ارزی خانواده</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-family: Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-        h2 { color: #333; font-size: 18px; }
-        input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #007bff; color: #fff; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        .row { display: flex; gap: 10px; }
-        .row > div { flex: 1; }
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Sidebar active state */
+        .nav-item.active {
+            background-color: #2563eb; /* blue-600 */
+            color: #ffffff;
+        }
+        
+        /* Input focus rings */
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
     </style>
 </head>
-<body>
+<body class="flex">
 
-<div class="container">
-    <!-- بخش ثبت هزینه -->
-    <div class="section">
-        <h2>📥 ثبت هزینه جدید (یوان ¥)</h2>
-        <div class="row">
-            <div><input type="text" id="exTitle" placeholder="عنوان هزینه"></div>
-            <div><input type="number" id="exAmount" placeholder="مبلغ"></div>
-        </div>
-        <div class="row">
-            <div>
-                <select id="exCategory">
-                    <option>قبوض (تجمیعی)</option>
-                    <option>اجاره</option>
-                    <option>هزینه‌های ماشین</option>
-                    <option>سفر</option>
-                    <option>جانبی محمد</option>
-                    <option>جانبی فاطمه</option>
-                    <option>هزینه‌های مصرفی منزل</option>
-                    <option>درمان احتمالی</option>
-                    <option>سرگرمی و تفریحات</option>
-                    <option>پوشاک</option>
-                    <option>اشتراک‌های دیجیتال</option>
-                    <option>هزینه‌های اقامتی و اداری</option>
-                    <option>هدایا و مناسبت‌ها</option>
-                </select>
+    <!-- Sidebar (Fixed Right) -->
+    <aside class="fixed top-0 right-0 w-64 h-screen bg-gray-900 text-white shadow-xl z-20 flex flex-col transition-all">
+        <div class="p-6 text-center border-b border-gray-700">
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-wallet text-2xl text-white"></i>
             </div>
-            <div><input type="date" id="exDate"></div>
+            <h1 class="text-xl font-bold">بودجه ارزی خانواده</h1>
+            <p class="text-xs text-gray-400 mt-1">مدیریت مالی به یوان (¥)</p>
         </div>
-        <button onclick="saveExpense()">ذخیره هزینه</button>
-    </div>
-
-    <!-- بخش بودجه سالانه -->
-    <div class="section">
-        <h2>🎯 تعیین بودجه سالانه</h2>
-        <div class="row">
-            <div><select id="bgCategory"></select></div>
-            <div><input type="number" id="bgAmount" placeholder="بودجه سالانه (¥)"></div>
-        </div>
-        <button onclick="saveBudget()">ذخیره بودجه</button>
-    </div>
-
-    <!-- بخش گزارش -->
-    <div class="section">
-        <h2>📊 گزارش عملکرد ماهانه</h2>
-        <div class="row">
-            <div>
-                <select id="reportYear">
-                    <option value="2026">2026</option>
-                    <option value="2027">2027</option>
-                </select>
-            </div>
-            <div>
-                <select id="reportMonth">
-                    <option value="01">ژانویه</option><option value="02">فوریه</option>
-                    <option value="03">مارس</option><option value="04">آوریل</option>
-                    <option value="05">مه</option><option value="06">ژوئن</option>
-                    <option value="07">جولای</option><option value="08">اوت</option>
-                    <option value="09">سپتامبر</option><option value="10">اکتبر</option>
-                    <option value="11">نوامبر</option><option value="12">دسامبر</option>
-                </select>
-            </div>
-        </div>
-        <button onclick="generateReport()">بروزرسانی نمودار</button>
-        <canvas id="budgetChart" style="margin-top:20px;"></canvas>
-    </div>
-</div>
-
-<script>
-    // اطلاعات فایربیس خود را اینجا جایگزین کنید
-    const firebaseConfig = {
-        apiKey: "AIzaSyC1Ss0FyUJitve9kwrXTDgznMQS0g9pdEo",
-        authDomain: "budget-5074a.firebaseapp.com",
-        databaseURL: "https://budget-5074a-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "budget-5074a",
-        storageBucket: "budget-5074a.firebasestorage.app",
-        messagingSenderId: "581233035544",
-        appId: "1:581233035544:web:954e065a16b3147109b66d"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // پر کردن لیست دسته‌بندی‌ها برای بخش بودجه
-    const catSelect = document.getElementById('exCategory');
-    const bgSelect = document.getElementById('bgCategory');
-    bgSelect.innerHTML = catSelect.innerHTML;
-
-    // ثبت هزینه
-    function saveExpense() {
-        const title = document.getElementById('exTitle').value;
-        const amount = Number(document.getElementById('exAmount').value);
-        const category = document.getElementById('exCategory').value;
-        const date = document.getElementById('exDate').value;
-        if (!title || !amount || !date) return alert('لطفا همه فیلدها را پر کنید');
-
-        db.ref('expenses').push({ title, amount, category, date }).then(() => {
-            alert('هزینه ثبت شد');
-            document.getElementById('exTitle').value = '';
-            document.getElementById('exAmount').value = '';
-        });
-    }
-
-    // ثبت بودجه
-    function saveBudget() {
-        const category = document.getElementById('bgCategory').value;
-        const amount = Number(document.getElementById('bgAmount').value);
-        if (!amount) return alert('مبلغ را وارد کنید');
-
-        db.ref('budgets/' + category).set(amount).then(() => alert('بودجه ذخیره شد'));
-    }
-
-    // تولید گزارش و رسم نمودار
-    let chartInstance = null;
-    async function generateReport() {
-        const year = document.getElementById('reportYear').value;
-        const month = document.getElementById('reportMonth').value;
-        const targetPrefix = `${year}-${month}`;
-
-        const expSnapshot = await db.ref('expenses').once('value');
-        const bgSnapshot = await db.ref('budgets').once('value');
         
-        const expenses = expSnapshot.val() || {};
-        const budgets = bgSnapshot.val() || {};
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="switchTab('entry')" id="nav-entry" class="nav-item active w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-plus-circle w-5"></i>
+                <span class="font-medium text-right">ثبت هزینه</span>
+            </button>
+            <button onclick="switchTab('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-chart-line w-5"></i>
+                <span class="font-medium text-right">گزارش و نمودارها</span>
+            </button>
+            <button onclick="switchTab('budget')" id="nav-budget" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-bullseye w-5"></i>
+                <span class="font-medium text-right">تعیین بودجه سالانه</span>
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-700 text-center text-xs text-gray-500">
+            <span id="auth-status">در حال اتصال...</span>
+        </div>
+    </aside>
 
-        let categorySums = {};
-        Object.values(expenses).forEach(exp => {
-            if (exp.date.startsWith(targetPrefix)) {
-                categorySums[exp.category] = (categorySums[exp.category] || 0) + exp.amount;
+    <!-- Main Content Area -->
+    <main class="mr-64 w-[calc(100%-16rem)] min-h-screen p-8">
+        
+        <!-- ================= TAB 1: EXPENSE ENTRY ================= -->
+        <section id="tab-entry" class="block animate-fade-in">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice-dollar text-blue-600"></i> ثبت هزینه جدید
+                </h2>
+                
+                <form id="expense-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">تاریخ پرداخت</label>
+                            <input type="date" id="entry-date" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 text-left dir-ltr">
+                        </div>
+                        
+                        <!-- Amount -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ (یوان ¥)</label>
+                            <div class="relative">
+                                <input type="number" id="entry-amount" step="0.01" min="0" required placeholder="مثال: 150.50" class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 pr-10 text-left dir-ltr">
+                                <span class="absolute right-3 top-3.5 text-gray-500 font-bold">¥</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Payer -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">پرداخت کننده</label>
+                            <select id="entry-payer" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
+                                <option value="Dali">Dali</option>
+                                <option value="Fatima">Fatima</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Method -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">متد پرداخت</label>
+                            <select id="entry-method" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
+                                <option value="Alipay">Alipay</option>
+                                <option value="Bank">Bank</option>
+                                <option value="Cash">Cash</option>
+                                <option value="WeChat">WeChat</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Category -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">دسته‌بندی</label>
+                            <select id="entry-category" required class="w-full bg-gray-50 border border-gray-300 text-gray-900 rounded-lg p-3 cursor-pointer">
+                                <option value="" disabled selected>انتخاب کنید...</option>
+                                <option value="قبوض (تجمیعی)">قبوض (تجمیعی)</option>
+                                <option value="قبوض (برق آب گاز)">قبوض (برق آب گاز)</option>
+                                <option value="اجاره">اجاره</option>
+                                <option value="هزینه‌های ماشین">هزینه‌های ماشین</option>
+                                <option value="سفر">سفر</option>
+                                <option value="شخصی محمد">شخصی محمد</option>
+                                <option value="شخصی فاطمه">شخصی فاطمه</option>
+                                <option value="هزینه‌های مصرفی منزل">هزینه‌های مصرفی منزل</option>
+                                <option value="درمان">درمان</option>
+                                <option value="سرگرمی و تفریحات">سرگرمی و تفریحات</option>
+                                <option value="پوشاک">پوشاک</option>
+                                <option value="اشتراک‌های دیجیتال">اشتراک‌های دیجیتال</option>
+                                <option value="هزینه‌های اقامتی و اداری">هزینه‌های اقامتی و اداری</option>
+                                <option value="هدایا و مناسبت‌ها">هدایا و مناسبت‌ها</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-check"></i> ثبت نهایی اطلاعات
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: REPORTS & CHARTS ================= -->
+        <section id="tab-reports" class="hidden animate-fade-in">
+            <div class="max-w-6xl mx-auto space-y-6">
+                <!-- Filters -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fa-solid fa-filter text-gray-500 ml-1"></i> فیلتر گزارشات</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">سال ماه (مثال: 2026-07)</label>
+                            <input type="month" id="filter-month" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">دسته‌بندی</label>
+                            <select id="filter-category" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                                <option value="ALL">همه دسته‌ها</option>
+                                <!-- JS will populate this -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">پرداخت کننده</label>
+                            <select id="filter-payer" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                                <option value="ALL">هر دو</option>
+                                <option value="Dali">Dali</option>
+                                <option value="Fatima">Fatima</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">متد پرداخت</label>
+                            <select id="filter-method" class="w-full border rounded p-2 text-sm" onchange="renderReports()">
+                                <option value="ALL">همه موارد</option>
+                                <option value="Alipay">Alipay</option>
+                                <option value="Bank">Bank</option>
+                                <option value="Cash">Cash</option>
+                                <option value="WeChat">WeChat</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Global Status -->
+                    <div id="report-global-status" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+                        <!-- Populated by JS -->
+                    </div>
+                    <!-- Expense Breakdown -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h4 class="font-bold text-gray-700 mb-3 text-center">خلاصه این ماه (فیلتر شده)</h4>
+                        <div class="flex justify-around items-center h-full pb-4">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500">جمع کل هزینه‌ها</p>
+                                <p id="report-total-spent" class="text-2xl font-bold text-red-500">0 ¥</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500">بودجه مجاز ماهانه</p>
+                                <p id="report-total-budget" class="text-2xl font-bold text-green-500">0 ¥</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">نمودار مقایسه هزینه و بودجه (تفکیک دسته‌بندی)</h3>
+                    <div class="w-full h-[400px]">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: BUDGET CONFIGURATION ================= -->
+        <section id="tab-budget" class="hidden animate-fade-in">
+            <div class="max-w-4xl mx-auto">
+                <!-- Set Budget Form -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-green-600"></i> تخصیص بودجه سالانه
+                    </h2>
+                    <p class="text-sm text-gray-500 mb-6">بودجه سالانه خود را برای هر دسته مشخص کنید. دسته‌های تخصیص یافته از منو حذف شده و در پایین نمایش داده می‌شوند.</p>
+                    
+                    <form id="budget-form" class="flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1 w-full">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">سال</label>
+                            <input type="number" id="budget-year" min="2020" max="2100" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3">
+                        </div>
+                        <div class="flex-[2] w-full">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
+                            <select id="budget-category" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3">
+                                <!-- JS will populate available categories dynamically -->
+                            </select>
+                        </div>
+                        <div class="flex-[2] w-full">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">مبلغ سالانه (¥)</label>
+                            <input type="number" id="budget-amount" step="0.01" min="1" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 dir-ltr text-left">
+                        </div>
+                        <div class="w-full md:w-auto">
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md">
+                                تایید
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Budget Bars Display -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">وضعیت مصرف بودجه در سال <span id="display-budget-year" class="text-blue-600"></span></h3>
+                        <select id="view-budget-year" class="bg-gray-100 border-none rounded p-2 text-sm font-bold cursor-pointer" onchange="updateBudgetBarsView()">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div id="budget-bars-container" class="space-y-6">
+                        <!-- Horizontal bars will be injected here via JS -->
+                        <div class="text-center text-gray-400 py-10">در حال بارگذاری اطلاعات...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === Constants & Config ===
+        const ALL_CATEGORIES = [
+            "قبوض (تجمیعی)", "اجاره", "هزینه‌های ماشین", "سفر", "شخصی محمد", 
+            "شخصی فاطمه", "هزینه‌های مصرفی منزل", "درمان", "سرگرمی و تفریحات", 
+            "قبوض (برق آب گاز)", "پوشاک", "اشتراک‌های دیجیتال", "هزینه‌های اقامتی و اداری", "هدایا و مناسبت‌ها"
+        ];
+
+        // Format number to Yuan without unnecessary .00
+        const formatYuan = (num) => {
+            if (num === null || num === undefined) return '0';
+            const parsed = parseFloat(num);
+            if (isNaN(parsed)) return '0';
+            let str = parsed.toFixed(2);
+            return str.replace(/\.00$/, '').replace(/(\.[0-9])0$/, '$1');
+        };
+
+        // UI Tab Switcher
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav-' + tabId).classList.add('active');
+
+            if (tabId === 'budget') updateBudgetBarsView();
+            if (tabId === 'reports') renderReports();
+        };
+
+        // Default year setups
+        const currentYear = new Date().getFullYear();
+        document.getElementById('budget-year').value = currentYear;
+        
+        const currentMonthStr = `${currentYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('filter-month').value = currentMonthStr;
+
+        // Populate Category Filters
+        const filterCatSelect = document.getElementById('filter-category');
+        ALL_CATEGORIES.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            filterCatSelect.appendChild(opt);
+        });
+
+        /* 
+           FIREBASE INITIALIZATION
+        */
+        let firebaseConfig;
+        const isImmersive = typeof __app_id !== 'undefined' && typeof __firebase_config !== 'undefined';
+        
+        if (isImmersive) {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // [FOR GITHUB PAGES]: وقتی کد را در گیت‌هاب قرار می‌دهید این بخش را با کانفیگ خودتان جایگزین کنید.
+            firebaseConfig = {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+                projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_PROJECT_ID.appspot.com",
+                messagingSenderId: "YOUR_SENDER_ID",
+                appId: "YOUR_APP_ID"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let userId = null;
+        let expensesData = [];
+        let budgetsData = [];
+        let chartInstance = null;
+
+        async function initAuth() {
+            try {
+                if (isImmersive && typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                userId = auth.currentUser.uid;
+                document.getElementById('auth-status').innerHTML = `<span class="text-green-500">متصل به ابر <i class="fa-solid fa-cloud-check"></i></span>`;
+                
+                startDataListeners();
+            } catch (error) {
+                console.error("Auth Error:", error);
+                document.getElementById('auth-status').innerHTML = `<span class="text-red-500">خطا در اتصال</span>`;
+                updateBudgetDropdown(currentYear);
+            }
+        }
+
+        function getCollectionPath(colName) {
+            if (isImmersive) {
+                return `artifacts/${__app_id}/users/${userId}/${colName}`;
+            }
+            return `dali_family_${colName}`; 
+        }
+
+        function startDataListeners() {
+            if (!userId) return;
+
+            // Listen to Expenses
+            const expRef = collection(db, getCollectionPath('expenses'));
+            onSnapshot(expRef, (snapshot) => {
+                expensesData = [];
+                snapshot.forEach(doc => {
+                    expensesData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                if(!document.getElementById('tab-reports').classList.contains('hidden')) renderReports();
+                if(!document.getElementById('tab-budget').classList.contains('hidden')) renderBudgetBars();
+            }, (error) => { console.error("Error fetching expenses", error); });
+
+            // Listen to Budgets
+            const budRef = collection(db, getCollectionPath('budgets'));
+            onSnapshot(budRef, (snapshot) => {
+                budgetsData = [];
+                snapshot.forEach(doc => {
+                    budgetsData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateYearSelector();
+                const selectedYear = parseInt(document.getElementById('budget-year').value);
+                updateBudgetDropdown(selectedYear);
+                
+                if(!document.getElementById('tab-budget').classList.contains('hidden')) renderBudgetBars();
+                if(!document.getElementById('tab-reports').classList.contains('hidden')) renderReports();
+            }, (error) => { console.error("Error fetching budgets", error); });
+        }
+
+        document.getElementById('budget-year').addEventListener('change', (e) => {
+            updateBudgetDropdown(parseInt(e.target.value));
+        });
+
+        function updateBudgetDropdown(year) {
+            const dropdown = document.getElementById('budget-category');
+            const configuredCats = budgetsData
+                .filter(b => b.year === year)
+                .map(b => b.category);
+            
+            dropdown.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>';
+            
+            let hasAvailable = false;
+            ALL_CATEGORIES.forEach(cat => {
+                if (!configuredCats.includes(cat)) {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.textContent = cat;
+                    dropdown.appendChild(opt);
+                    hasAvailable = true;
+                }
+            });
+
+            if(!hasAvailable) {
+                dropdown.innerHTML = '<option value="" disabled>همه دسته‌ها برای این سال تعیین شده‌اند</option>';
+            }
+        }
+
+        function updateYearSelector() {
+            const viewSelector = document.getElementById('view-budget-year');
+            const years = new Set(budgetsData.map(b => b.year));
+            years.add(new Date().getFullYear());
+            
+            const sortedYears = Array.from(years).sort((a,b)=> b - a);
+            const currentVal = viewSelector.value || new Date().getFullYear().toString();
+            
+            viewSelector.innerHTML = '';
+            sortedYears.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = `سال ${y}`;
+                if(y.toString() === currentVal) opt.selected = true;
+                viewSelector.appendChild(opt);
+            });
+        }
+
+        window.updateBudgetBarsView = function() {
+            renderBudgetBars();
+        };
+
+        document.getElementById('expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return alert('خطا: عدم اتصال به دیتابیس');
+
+            const dateStr = document.getElementById('entry-date').value;
+            const payload = {
+                date: dateStr,
+                year: parseInt(dateStr.split('-')[0]),
+                month: dateStr.split('-').slice(0,2).join('-'), 
+                amount: parseFloat(document.getElementById('entry-amount').value),
+                payer: document.getElementById('entry-payer').value,
+                method: document.getElementById('entry-method').value,
+                category: document.getElementById('entry-category').value,
+                timestamp: new Date().getTime()
+            };
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> در حال ذخیره...';
+            submitBtn.disabled = true;
+
+            try {
+                await addDoc(collection(db, getCollectionPath('expenses')), payload);
+                e.target.reset();
+                document.getElementById('entry-date').value = dateStr;
+                alert('✅ هزینه با موفقیت ثبت شد');
+            } catch (error) {
+                alert('❌ خطا در ثبت اطلاعات: ' + error.message);
+            } finally {
+                submitBtn.innerHTML = originalHtml;
+                submitBtn.disabled = false;
             }
         });
 
-        const labels = Array.from(document.getElementById('exCategory').options).map(opt => opt.value);
-        const actualData = labels.map(label => categorySums[label] || 0);
-        const budgetData = labels.map(label => (budgets[label] || 0) / 12);
+        document.getElementById('budget-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return alert('خطا: عدم اتصال به دیتابیس');
 
-        if (chartInstance) chartInstance.destroy();
-        
-        const ctx = document.getElementById('budgetChart').getContext('2d');
-        chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'هزینه واقعی (¥)', data: actualData, backgroundColor: '#dc3545' },
-                    { label: 'بودجه مجاز ماهانه (¥)', data: budgetData, backgroundColor: '#28a745' }
-                ]
-            },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            const year = parseInt(document.getElementById('budget-year').value);
+            const category = document.getElementById('budget-category').value;
+            const amount = parseFloat(document.getElementById('budget-amount').value);
+
+            if(!category) return alert('لطفاً دسته‌بندی را انتخاب کنید.');
+
+            const docId = `${year}_${btoa(encodeURIComponent(category)).substring(0,20)}`;
+            const payload = { year, category, amount };
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            try {
+                await setDoc(doc(db, getCollectionPath('budgets'), docId), payload);
+                document.getElementById('budget-amount').value = '';
+                
+                const viewSelector = document.getElementById('view-budget-year');
+                if(viewSelector) {
+                    let hasOpt = Array.from(viewSelector.options).some(opt => opt.value === year.toString());
+                    if(!hasOpt) {
+                        const opt = document.createElement('option');
+                        opt.value = year;
+                        opt.textContent = `سال ${year}`;
+                        viewSelector.appendChild(opt);
+                    }
+                    viewSelector.value = year.toString();
+                }
+                
+            } catch (error) {
+                alert('❌ خطا در ذخیره بودجه: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+            }
         });
-    }
-    
-</script>
+
+        function renderBudgetBars() {
+            const container = document.getElementById('budget-bars-container');
+            const viewSelector = document.getElementById('view-budget-year');
+            const displayYearLabel = document.getElementById('display-budget-year');
+            
+            if(!viewSelector || !viewSelector.value) return;
+            const selectedYear = parseInt(viewSelector.value);
+            displayYearLabel.textContent = selectedYear;
+
+            const yearBudgets = budgetsData.filter(b => b.year === selectedYear);
+            
+            if(yearBudgets.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-10 bg-gray-50 rounded-xl">هنوز بودجه‌ای برای این سال ثبت نشده است.</div>';
+                return;
+            }
+
+            const yearExpenses = expensesData.filter(e => e.year === selectedYear);
+            const expensesByCat = {};
+            yearExpenses.forEach(e => {
+                expensesByCat[e.category] = (expensesByCat[e.category] || 0) + e.amount;
+            });
+
+            container.innerHTML = '';
+            
+            yearBudgets.forEach(b => {
+                const spent = expensesByCat[b.category] || 0;
+                const percent = b.amount > 0 ? (spent / b.amount) * 100 : 0;
+                const clampedPercent = Math.min(percent, 100);
+                
+                const spentColor = percent > 100 ? 'bg-red-600' : (percent > 85 ? 'bg-orange-500' : 'bg-red-500');
+                
+                const html = `
+                <div class="mb-5">
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span class="font-bold text-gray-700">${b.category} <span class="text-xs text-gray-400 font-normal mr-2">(سقف: ${formatYuan(b.amount)} ¥)</span></span>
+                        <span class="font-bold text-gray-700" dir="ltr">${formatYuan(spent)} ¥</span>
+                    </div>
+                    <div class="w-full bg-green-500 rounded-full h-5 relative overflow-hidden shadow-inner flex items-center">
+                        <div class="${spentColor} h-full absolute right-0 top-0 transition-all duration-1000 ease-out flex items-center justify-start overflow-visible" style="width: ${clampedPercent}%">
+                        </div>
+                        <div class="absolute left-2 text-xs font-bold text-white z-10 text-shadow-sm shadow-black">${formatYuan(b.amount - spent)} ¥ باقی‌مانده</div>
+                    </div>
+                </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        window.renderReports = function() {
+            if(!document.getElementById('filter-month')) return;
+
+            const selectedMonthStr = document.getElementById('filter-month').value; 
+            if(!selectedMonthStr) return;
+            const [selYear, selMonthNum] = selectedMonthStr.split('-');
+            const yearInt = parseInt(selYear);
+
+            const filterCat = document.getElementById('filter-category').value;
+            const filterPayer = document.getElementById('filter-payer').value;
+            const filterMethod = document.getElementById('filter-method').value;
+
+            let monthlyExps = expensesData.filter(e => e.month === selectedMonthStr);
+            
+            if(filterCat !== 'ALL') monthlyExps = monthlyExps.filter(e => e.category === filterCat);
+            if(filterPayer !== 'ALL') monthlyExps = monthlyExps.filter(e => e.payer === filterPayer);
+            if(filterMethod !== 'ALL') monthlyExps = monthlyExps.filter(e => e.method === filterMethod);
+
+            const expByCat = {};
+            monthlyExps.forEach(e => {
+                expByCat[e.category] = (expByCat[e.category] || 0) + e.amount;
+            });
+            const totalSpent = monthlyExps.reduce((sum, e) => sum + e.amount, 0);
+
+            const yearBudgets = budgetsData.filter(b => b.year === yearInt);
+            const budgetByCat = {};
+            yearBudgets.forEach(b => {
+                budgetByCat[b.category] = b.amount / 12.0;
+            });
+
+            let totalMonthlyBudget = 0;
+            if (filterCat !== 'ALL') {
+                totalMonthlyBudget = budgetByCat[filterCat] || 0;
+            } else {
+                totalMonthlyBudget = yearBudgets.reduce((sum, b) => sum + (b.amount / 12.0), 0);
+            }
+
+            document.getElementById('report-total-spent').textContent = `${formatYuan(totalSpent)} ¥`;
+            document.getElementById('report-total-budget').textContent = `${formatYuan(totalMonthlyBudget)} ¥`;
+            
+            const statusContainer = document.getElementById('report-global-status');
+            if (totalMonthlyBudget === 0) {
+                 statusContainer.innerHTML = `
+                    <div class="text-gray-500">
+                        <i class="fa-solid fa-circle-info text-2xl mb-2"></i>
+                        <h4 class="font-bold text-lg">بودجه‌ای تعریف نشده</h4>
+                        <p class="text-sm mt-1">برای مشاهده وضعیت، ابتدا بودجه سال ${yearInt} را تعیین کنید.</p>
+                    </div>`;
+                 statusContainer.className = "bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center";
+            } else if (totalSpent <= totalMonthlyBudget) {
+                 statusContainer.innerHTML = `
+                    <div class="text-green-700">
+                        <i class="fa-solid fa-face-smile-beam text-3xl mb-2"></i>
+                        <h4 class="font-bold text-xl">عالی! عقب‌تر از سقف بودجه</h4>
+                        <p class="text-sm mt-1">شما ${formatYuan(totalMonthlyBudget - totalSpent)} یوان کمتر از بودجه مجاز مصرف کرده‌اید.</p>
+                    </div>`;
+                 statusContainer.className = "bg-green-50 rounded-2xl shadow-sm border border-green-200 p-6 text-center";
+            } else {
+                 statusContainer.innerHTML = `
+                    <div class="text-red-700">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i>
+                        <h4 class="font-bold text-xl">هشدار! عبور از بودجه</h4>
+                        <p class="text-sm mt-1">شما ${formatYuan(totalSpent - totalMonthlyBudget)} یوان بیشتر از سقف مجاز این ماه هزینه کرده‌اید.</p>
+                    </div>`;
+                 statusContainer.className = "bg-red-50 rounded-2xl shadow-sm border border-red-200 p-6 text-center";
+            }
+
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            let chartLabels = [];
+            if (filterCat !== 'ALL') {
+                chartLabels = [filterCat];
+            } else {
+                chartLabels = ALL_CATEGORIES.filter(c => (budgetByCat[c] > 0 || expByCat[c] > 0));
+            }
+
+            const dataSpent = chartLabels.map(c => expByCat[c] || 0);
+            const dataBudget = chartLabels.map(c => budgetByCat[c] || 0);
+
+            Chart.defaults.font.family = 'Vazirmatn';
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'هزینه واقعی انجام شده (¥)',
+                            data: dataSpent,
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'بودجه مجاز ماهانه (¥)',
+                            data: dataBudget,
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', rtl: true, labels: { font: { family: 'Vazirmatn' } } },
+                        tooltip: {
+                            titleFont: { family: 'Vazirmatn' },
+                            bodyFont: { family: 'Vazirmatn' },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatYuan(context.raw) + ' ¥';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            position: 'right'
+                        },
+                        x: {
+                            ticks: { font: { family: 'Vazirmatn' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        initAuth();
+
+    </script>
 </body>
 </html>
