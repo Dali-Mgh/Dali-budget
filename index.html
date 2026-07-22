@@ -1,4 +1,4 @@
-app_code = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -47,7 +47,7 @@ app_code = """<!DOCTYPE html>
             <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">نام کاربری</label>
-                    <input type="text" id="login-username" placeholder="مثال: jooji" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-left dir-ltr focus:bg-white">
+                    <input type="text" id="login-username" placeholder="نام کاربری" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-left dir-ltr focus:bg-white">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">رمز عبور</label>
@@ -308,7 +308,6 @@ app_code = """<!DOCTYPE html>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // ================= CHANGE 1: Import Email/Password Auth functions =================
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, setDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -782,7 +781,3 @@ app_code = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(app_code)
